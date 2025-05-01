@@ -1,0 +1,16 @@
+Запустить TomCat
+http://localhost:9005/
+
+https://spring.io/ генерируем пакет проекта
+добавляем зависимости при генерации
+
+В терминале:
+npm -v
+npm init -y
+npm i bootstrap
+npm i vite --save-dev
+
+ npm install @vitejs/plugin-legacy sass --save-dev
+
+ npm run build
+

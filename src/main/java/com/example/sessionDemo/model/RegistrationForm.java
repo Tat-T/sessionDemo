@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @PasswordMatches
-public class LoginForm {
+public class RegistrationForm {
 
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Некорректный формат email")
