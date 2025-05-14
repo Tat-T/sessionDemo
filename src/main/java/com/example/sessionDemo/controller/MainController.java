@@ -1,5 +1,7 @@
 package com.example.sessionDemo.controller;
 
+import com.example.sessionDemo.entity.User;
+import com.example.sessionDemo.model.LoginForm;
 import com.example.sessionDemo.model.RegistrationForm;
 import com.example.sessionDemo.service.UserService;
 import jakarta.servlet.http.HttpSession;
@@ -14,10 +16,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.naming.Binding;
+import java.security.Principal;
 
 @Controller
 @RequestMapping("/")
-
 public class MainController {
     private UserService userService;
 
@@ -27,7 +29,10 @@ public class MainController {
     }
 
     @GetMapping
-    public String home() {
+    public String home(HttpSession session, Model model) {
+        String email = (String) session.getAttribute("email");
+        model.addAttribute("isAuthenticated", email != null);
+        model.addAttribute("email", email);
         return "index";
     }
 
@@ -36,15 +41,17 @@ public class MainController {
         return "login";
     }
 
-//    @PostMapping("/login")
-//    public String loginUser(@Valid @ModelAttribute LoginForm loginForm) {
-//        User user = new User(loginForm.getEmail(), loginForm.getPassword());
-//        if (user.valid()) {
-//            userService.saveUser(user);
-//        } else {
-//
-//        }
-    //   }
+    @PostMapping("/login")
+    public String loginUser(@Valid @ModelAttribute("loginData") LoginForm loginForm,
+                            BindingResult result, HttpSession session) {
+        if (result.hasErrors()) {
+            return "login";
+        }
+
+        User user = new User(loginForm.getEmail(), loginForm.getPassword());
+        session.setAttribute("email", user.getEmail());
+        return "redirect:/";
+    }
 
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
@@ -53,14 +60,29 @@ public class MainController {
     }
 
     @PostMapping("/register")
-    public String proccessRegister(
+    public String processRegister(
             @Valid @ModelAttribute("registrationForm") RegistrationForm registrationForm,
             BindingResult bindingResult,
             HttpSession session
     ) {
         if (bindingResult.hasErrors()) {
+            return "register"; // Остаемся на странице, если есть ошибки
+        }
+        // Логика регистрации:
+        // Проверка существования пользователя
+        if(userService.existsByEmail(registrationForm.getEmail())) {
+            bindingResult.rejectValue("email",
+                    "error.user",
+                    "Пользователь уже зарегистрирован"
+            );
             return "register";
         }
+
+        // Сохранение пользователя
+        User user = new User(registrationForm.getEmail(), registrationForm.getPassword());
+        userService.saveUser(user);
+        session.setAttribute("email", user.getEmail());
+
         return "redirect:/";
     }
 }
